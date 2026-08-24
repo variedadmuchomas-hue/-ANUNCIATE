@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anunciate — Vende lo que sea, a quien sea</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B2A4A;
+    --ink-soft:#3A4A6B;
+    --paper:#F7F3EA;
+    --paper-dark:#EDE6D6;
+    --marker:#FFC93C;
+    --pin:#E4572E;
+    --sage:#6B8F71;
+    --line: rgba(27,42,74,.14);
+    --shadow: rgba(27,42,74,.18);
+    --radius: 3px;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:var(--paper);
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(27,42,74,.06) 1px, transparent 0);
+    background-size: 22px 22px;
+    color:var(--ink);
+    font-family:'Work Sans', sans-serif;
+    min-height:100vh;
+  }
+  .display{ font-family:'Anton', sans-serif; letter-spacing:.5px; text-transform:uppercase; }
+  .mono{ font-family:'IBM Plex Mono', monospace; }
+
+  a{ color:inherit; }
+  button{ font-family:inherit; cursor:pointer; }
+
+  /* ---------- Header ---------- */
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:22px clamp(18px,4vw,48px);
+    border-bottom:2px solid var(--ink);
+    position:sticky; top:0; z-index:50;
+    background:var(--paper);
+  }
+  .logo{ display:flex; align-items:center; gap:10px; }
+  .logo-mark{
+    width:34px; height:34px; background:var(--pin); border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--paper); font-family:'Anton',sans-serif; font-size:18px;
+    transform:rotate(-8deg);
+    box-shadow:0 2px 0 var(--ink);
+  }
+  .logo h1{ font-size:22px; margin:0; }
+  .tagline{ font-size:12px; color:var(--ink-soft); margin-top:-2px; }
+
+  .auth-area{ display:flex; align-items:center; gap:12px; font-size:14px; }
+  .btn{
+    border:2px solid var(--ink); background:var(--paper);
+    padding:9px 16px; border-radius:var(--radius);
+    font-weight:600; font-size:14px; color:var(--ink);
+    box-shadow:3px 3px 0 var(--ink);
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .btn:hover{ transform:translate(-1px,-1px); box-shadow:4px 4px 0 var(--ink); }
+  .btn:active{ transform:translate(1px,1px); box-shadow:1px 1px 0 var(--ink); }
+  .btn-primary{ background:var(--marker); }
+  .btn-ghost{ background:transparent; box-shadow:none; border-color:transparent; text-decoration:underline; }
+  .btn-small{ padding:6px 12px; font-size:12px; box-shadow:2px 2px 0 var(--ink); }
+
+  /* ---------- Hero strip ---------- */
+  .hero{
+    padding:34px clamp(18px,4vw,48px) 10px;
+    max-width:1180px; margin:0 auto;
+  }
+  .eyebrow{
+    display:inline-block; background:var(--ink); color:var(--paper);
+    font-size:11px; letter-spacing:1.5px; padding:4px 10px; border-radius:20px;
+    margin-bottom:10px;
+  }
+  .hero h2{ font-size:clamp(28px,4.4vw,44px); margin:0 0 6px; line-height:1.05; }
+  .hero p{ color:var(--ink-soft); max-width:560px; margin:0; font-size:15px; }
+
+  /* ---------- Layout ---------- */
+  .layout{
+    max-width:1180px; margin:26px auto 80px;
+    padding:0 clamp(18px,4vw,48px);
+    display:grid; grid-template-columns: 340px 1fr; gap:28px;
+    align-items:start;
+  }
+  @media (max-width: 880px){ .layout{ grid-template-columns:1fr; } }
+
+  /* ---------- Card base (index-card look) ---------- */
+  .card{
+    background:#fff; border:2px solid var(--ink); border-radius:var(--radius);
+    box-shadow:5px 5px 0 var(--shadow);
+    padding:20px;
+  }
+
+  /* ---------- Publish panel ---------- */
+  .publish-panel{ position:sticky; top:96px; }
+  .publish-panel h3{ margin:0 0 4px; font-size:20px; }
+  .publish-panel .hint{ font-size:12px; color:var(--ink-soft); margin:0 0 16px; }
+
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:12px; font-weight:600; margin-bottom:5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.4px; }
+  .field input, .field textarea, .field select{
+    width:100%; border:1.5px solid var(--line); border-radius:var(--radius);
+    padding:10px 11px; font-size:14px; font-family:inherit; background:var(--paper);
+    color:var(--ink);
+  }
+  .field input:focus, .field textarea:focus, .field select:focus{
+    outline:3px solid var(--marker); outline-offset:0; border-color:var(--ink);
+  }
+  .field textarea{ min-height:80px; resize:vertical; }
+  .row-2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
+  .form-msg{ font-size:13px; margin-top:10px; min-height:16px; }
+  .form-msg.error{ color:var(--pin); }
+  .form-msg.ok{ color:var(--sage); }
+
+  .locked-note{
+    text-align:center; padding:14px 10px; font-size:13px; color:var(--ink-soft);
+    border:1.5px dashed var(--line); border-radius:var(--radius); background:var(--paper);
+  }
+
+  /* ---------- Feed ---------- */
+  .feed-head{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px; }
+  .feed-head h3{ margin:0; font-size:20px; }
+  .feed-count{ font-size:12px; color:var(--ink-soft); }
+
+  .feed-filters{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
+  .chip{
+    border:1.5px solid var(--ink); background:transparent; border-radius:20px;
+    padding:6px 13px; font-size:12px; font-weight:600;
+  }
+  .chip.active{ background:var(--ink); color:var(--paper); }
+
+  /* ---------- Créditos ---------- */
+  .credits-badge{
+    display:inline-flex; align-items:center; gap:5px;
+    background:var(--marker); border:1.5px solid var(--ink); border-radius:20px;
+    padding:4px 11px; font-size:12px; font-weight:700;
+  }
+  .credits-line{ font-size:12px; color:var(--ink-soft); margin:-6px 0 14px; }
+  .credits-line b{ color:var(--ink); }
+
+  /* ---------- Pestañas del feed ---------- */
+  .feed-tabs{ display:flex; gap:6px; margin-bottom:16px; }
+  .feed-tab{
+    border:2px solid var(--ink); background:transparent; border-radius:var(--radius);
+    padding:7px 14px; font-size:13px; font-weight:700;
+  }
+  .feed-tab.active{ background:var(--ink); color:var(--paper); }
+
+  /* ---------- Estado del anuncio ---------- */
+  .status-badge{
+    position:absolute; top:10px; right:10px; font-size:10px; font-weight:700;
+    text-transform:uppercase; letter-spacing:.4px; padding:3px 9px; border-radius:20px;
+    border:1px solid rgba(27,42,74,.25);
+  }
+  .status-pendiente{ background:#FDE7B0; color:#7A5A00; }
+  .status-aprobado{ background:#DCEBDD; color:#2F5C36; }
+  .status-rechazado{ background:#F7D3C6; color:#9A2E13; }
+
+  .board{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(240px,1fr));
+    gap:22px;
+  }
+  .ad-card{
+    background:#fff; border:2px solid var(--ink); border-radius:2px;
+    padding:16px 16px 14px; position:relative;
+    box-shadow:6px 6px 0 var(--shadow);
+    transition:transform .15s ease;
+  }
+  .ad-card:nth-child(3n+1){ transform:rotate(-0.6deg); }
+  .ad-card:nth-child(3n+2){ transform:rotate(0.5deg); }
+  .ad-card:nth-child(3n){ transform:rotate(-0.3deg); }
+  .ad-card:hover{ transform:rotate(0deg) translateY(-3px); }
+
+  .tape{
+    position:absolute; top:-10px; left:50%; transform:translateX(-50%) rotate(-2deg);
+    width:64px; height:20px; background:rgba(255,201,60,.85);
+    border:1px solid rgba(27,42,74,.25);
+  }
+  .ad-category{
+    display:inline-block; font-size:10px; letter-spacing:.5px; text-transform:uppercase;
+    background:var(--paper-dark); border:1px solid var(--line); border-radius:20px;
+    padding:3px 9px; margin-bottom:10px; color:var(--ink-soft); font-weight:600;
+  }
+  .ad-title{ font-size:17px; margin:0 0 6px; line-height:1.2; }
+  .ad-desc{ font-size:13px; color:var(--ink-soft); margin:0 0 12px; line-height:1.4;
+    display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+  .ad-foot{ display:flex; align-items:center; justify-content:space-between; border-top:1px dashed var(--line); padding-top:10px; }
+  .ad-price{ font-size:15px; font-weight:600; color:var(--pin); }
+  .ad-contact{ font-size:11px; color:var(--ink-soft); }
+  .ad-seller{ font-size:10px; color:var(--ink-soft); margin-top:8px; opacity:.8; }
+
+  .empty-state{
+    grid-column:1/-1; text-align:center; padding:50px 20px;
+    border:2px dashed var(--line); border-radius:var(--radius);
+  }
+  .empty-state h4{ margin:0 0 6px; font-size:18px; }
+  .empty-state p{ margin:0; color:var(--ink-soft); font-size:13px; }
+
+  /* ---------- Modal ---------- */
+  .overlay{
+    position:fixed; inset:0; background:rgba(27,42,74,.45);
+    display:none; align-items:center; justify-content:center; z-index:100; padding:16px;
+  }
+  .overlay.open{ display:flex; }
+  .modal{
+    background:var(--paper); border:2px solid var(--ink); border-radius:var(--radius);
+    width:100%; max-width:380px; padding:24px; box-shadow:8px 8px 0 var(--shadow);
+  }
+  .modal h3{ margin:0 0 4px; }
+  .modal .hint{ font-size:12px; color:var(--ink-soft); margin:0 0 18px; }
+  .modal-tabs{ display:flex; gap:6px; margin-bottom:16px; }
+  .modal-tabs button{
+    flex:1; padding:8px; font-size:12px; font-weight:700; border:1.5px solid var(--ink);
+    background:transparent; border-radius:var(--radius);
+  }
+  .modal-tabs button.active{ background:var(--ink); color:var(--paper); }
+  .modal-close{ float:right; background:none; border:none; font-size:18px; color:var(--ink-soft); }
+
+  footer{
+    text-align:center; font-size:11px; color:var(--ink-soft); padding:26px 16px 40px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark display">A</div>
+    <div>
+      <h1 class="display">Anunciate</h1>
+      <div class="tagline">Tu vitrina para vender lo que sea</div>
+    </div>
+  </div>
+  <div class="auth-area" id="authArea">
+    <!-- Se llena por JS según el estado de sesión -->
+  </div>
+</header>
+
+<section class="hero">
+  <span class="eyebrow">Marketplace comunitario</span>
+  <h2 class="display">Publica tu producto<br>o servicio en segundos</h2>
+  <p>Un tablero público donde cualquiera puede anunciar lo que vende y encontrar lo que necesita, sin comisiones ni intermediarios.</p>
+</section>
+
+<main class="layout">
+
+  <!-- ---------- Panel de publicación ---------- -->
+  <aside class="card publish-panel">
+    <div id="publishLocked" class="locked-note" style="display:none;">
+      Inicia sesión para publicar tu anuncio en el tablero.
+    </div>
+
+    <div id="noCreditsNote" class="locked-note" style="display:none;">
+      No te quedan créditos para publicar. Consigue más créditos para seguir anunciando.
+    </div>
+
+    <form id="publishForm" style="display:none;">
+      <h3>Publicar anuncio</h3>
+      <p class="hint">Publicar cuesta 1 crédito. Un moderador revisa y aprueba tu anuncio antes de que aparezca en el tablero público.</p>
+      <p class="credits-line">Tienes <b id="creditsInline">0</b> crédito(s) disponibles.</p>
+
+      <div class="field">
+        <label for="adTitle">Título</label>
+        <input id="adTitle" type="text" maxlength="60" placeholder="Ej. Clases de guitarra a domicilio" required>
+      </div>
+
+      <div class="field">
+        <label for="adCategory">Categoría</label>
+        <select id="adCategory" required>
+          <option value="">Elige una categoría</option>
+          <option value="Productos">Productos</option>
+          <option value="Servicios">Servicios</option>
+          <option value="Empleos">Empleos</option>
+          <option value="Inmuebles">Inmuebles</option>
+          <option value="Vehículos">Vehículos</option>
+          <option value="Otros">Otros</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="adDesc">Descripción</label>
+        <textarea id="adDesc" maxlength="280" placeholder="Cuenta qué ofreces, condiciones, disponibilidad..." required></textarea>
+      </div>
+
+      <div class="row-2">
+        <div class="field">
+          <label for="adPrice">Precio</label>
+          <input id="adPrice" type="text" placeholder="Ej. 50.000 o A convenir" required>
+        </div>
+        <div class="field">
+          <label for="adContact">WhatsApp / Contacto</label>
+          <input id="adContact" type="text" placeholder="Ej. 300 123 4567" required>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width:100%;">Publicar anuncio</button>
+      <p class="form-msg" id="publishMsg"></p>
+    </form>
+  </aside>
+
+  <!-- ---------- Feed / tablero ---------- -->
+  <section>
+    <div class="feed-head">
+      <h3 id="feedTitle">Tablero de anuncios</h3>
+      <span class="feed-count" id="feedCount">0 anuncios</span>
+    </div>
+
+    <div class="feed-tabs" id="feedTabs">
+      <button class="feed-tab active" data-view="publico">Tablero público</button>
+      <button class="feed-tab" data-view="mios">Mis anuncios</button>
+    </div>
+
+    <div class="feed-filters" id="feedFilters">
+      <button class="chip active" data-cat="Todos">Todos</button>
+      <button class="chip" data-cat="Productos">Productos</button>
+      <button class="chip" data-cat="Servicios">Servicios</button>
+      <button class="chip" data-cat="Empleos">Empleos</button>
+      <button class="chip" data-cat="Inmuebles">Inmuebles</button>
+      <button class="chip" data-cat="Vehículos">Vehículos</button>
+      <button class="chip" data-cat="Otros">Otros</button>
+    </div>
+
+    <div class="board" id="board">
+      <div class="empty-state">
+        <h4>Cargando el tablero...</h4>
+        <p>Conectando con la base de datos.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>Anunciate — proyecto en construcción · versión inicial del repositorio</footer>
+
+<!-- ---------- Modal de login / registro ---------- -->
+<div class="overlay" id="authOverlay">
+  <div class="modal">
+    <button class="modal-close" id="closeModal">✕</button>
+    <h3>Entra a Anunciate</h3>
+    <p class="hint">Necesitas una cuenta para publicar anuncios.</p>
+
+    <div class="modal-tabs">
+      <button id="tabLogin" class="active">Iniciar sesión</button>
+      <button id="tabRegister">Crear cuenta</button>
+    </div>
+
+    <form id="authForm">
+      <div class="field">
+        <label for="authEmail">Correo</label>
+        <input id="authEmail" type="email" required>
+      </div>
+      <div class="field">
+        <label for="authPass">Contraseña</label>
+        <input id="authPass" type="password" minlength="6" required>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;" id="authSubmitBtn">Iniciar sesión</button>
+      <p class="form-msg" id="authMsg"></p>
+    </form>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getAuth, onAuthStateChanged, signInWithEmailAndPassword,
+    createUserWithEmailAndPassword, signOut
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import {
+    getFirestore, collection, doc, addDoc, onSnapshot,
+    query, orderBy, where, serverTimestamp,
+    runTransaction, getDoc, setDoc
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  // Créditos de bienvenida al registrarse (ajustable)
+  const CREDITOS_BIENVENIDA = 3;
+  const COSTO_PUBLICAR = 1;
+
+  // -----------------------------------------------------------------
+  // TODO: reemplaza esto con la configuración real de tu proyecto de
+  // Firebase (Configuración del proyecto > Tus apps > SDK config).
+  // Estos son valores de ejemplo y NO funcionan hasta que los cambies.
+  // -----------------------------------------------------------------
+  const firebaseConfig = {
+    apiKey: "AIzaSyAWUfbcGmXWExomQQ75S-_bzdd6NG6KsDU",
+    authDomain: "anunciate-fe667.firebaseapp.com",
+    projectId: "anunciate-fe667",
+    storageBucket: "anunciate-fe667.firebasestorage.app",
+    messagingSenderId: "241022926550",
+    appId: "1:241022926550:web:f9499c30a94952481ad377"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const adsCollection = collection(db, "anuncios");
+
+  // ---------------- Estado ----------------
+  let currentUser = null;
+  let userProfile = null;       // { creditos, rol, email }
+  let profileUnsub = null;
+  let myAdsUnsub = null;
+  let currentFilter = "Todos";
+  let feedView = "publico";     // "publico" | "mios"
+  let allAds = [];
+  let myAds = [];
+  let authMode = "login"; // "login" | "register"
+
+  // ---------------- Referencias DOM ----------------
+  const authArea = document.getElementById("authArea");
+  const authOverlay = document.getElementById("authOverlay");
+  const authForm = document.getElementById("authForm");
+  const authEmail = document.getElementById("authEmail");
+  const authPass = document.getElementById("authPass");
+  const authMsg = document.getElementById("authMsg");
+  const authSubmitBtn = document.getElementById("authSubmitBtn");
+  const tabLogin = document.getElementById("tabLogin");
+  const tabRegister = document.getElementById("tabRegister");
+  const closeModal = document.getElementById("closeModal");
+
+  const publishLocked = document.getElementById("publishLocked");
+  const noCreditsNote = document.getElementById("noCreditsNote");
+  const publishForm = document.getElementById("publishForm");
+  const publishMsg = document.getElementById("publishMsg");
+  const creditsInline = document.getElementById("creditsInline");
+
+  const board = document.getElementById("board");
+  const feedTitle = document.getElementById("feedTitle");
+  const feedCount = document.getElementById("feedCount");
+  const feedFilters = document.getElementById("feedFilters");
+  const feedTabs = document.getElementById("feedTabs");
+
+  // ---------------- Auth: UI ----------------
+  function renderAuthArea() {
+    if (currentUser) {
+      const creditos = userProfile ? userProfile.creditos : "…";
+      authArea.innerHTML = `
+        <span class="credits-badge">🎟 ${creditos}</span>
+        <span class="mono">${currentUser.email}</span>
+        <button class="btn btn-small" id="logoutBtn">Cerrar sesión</button>
+      `;
+      document.getElementById("logoutBtn").addEventListener("click", () => signOut(auth));
+    } else {
+      authArea.innerHTML = `<button class="btn btn-primary btn-small" id="openAuthBtn">Iniciar sesión</button>`;
+      document.getElementById("openAuthBtn").addEventListener("click", openAuthModal);
+    }
+  }
+
+  function openAuthModal() {
+    authMsg.textContent = "";
+    authOverlay.classList.add("open");
+  }
+  closeModal.addEventListener("click", () => authOverlay.classList.remove("open"));
+  authOverlay.addEventListener("click", (e) => { if (e.target === authOverlay) authOverlay.classList.remove("open"); });
+
+  function setAuthMode(mode) {
+    authMode = mode;
+    tabLogin.classList.toggle("active", mode === "login");
+    tabRegister.classList.toggle("active", mode === "register");
+    authSubmitBtn.textContent = mode === "login" ? "Iniciar sesión" : "Crear cuenta";
+    authMsg.textContent = "";
+  }
+  tabLogin.addEventListener("click", () => setAuthMode("login"));
+  tabRegister.addEventListener("click", () => setAuthMode("register"));
+
+  authForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    authMsg.className = "form-msg";
+    authMsg.textContent = "Un momento...";
+    try {
+      if (authMode === "login") {
+        await signInWithEmailAndPassword(auth, authEmail.value, authPass.value);
+      } else {
+        await createUserWithEmailAndPassword(auth, authEmail.value, authPass.value);
+      }
+      authOverlay.classList.remove("open");
+      authForm.reset();
+    } catch (err) {
+      authMsg.className = "form-msg error";
+      authMsg.textContent = traducirErrorAuth(err.code);
+    }
+  });
+
+  function traducirErrorAuth(code) {
+    const mapa = {
+      "auth/email-already-in-use": "Ese correo ya tiene una cuenta.",
+      "auth/invalid-email": "El correo no es válido.",
+      "auth/weak-password": "La contraseña debe tener al menos 6 caracteres.",
+      "auth/user-not-found": "No existe una cuenta con ese correo.",
+      "auth/wrong-password": "Contraseña incorrecta.",
+      "auth/invalid-credential": "Correo o contraseña incorrectos.",
+      "auth/api-key-not-valid.-please-pass-a-valid-api-key.": "Falta configurar Firebase (revisa firebaseConfig)."
+    };
+    return mapa[code] || "Ocurrió un error. Intenta de nuevo.";
+  }
+
+  onAuthStateChanged(auth, async (user) => {
+    currentUser = user;
+
+    // Limpia listeners de la sesión anterior
+    if (profileUnsub) { profileUnsub(); profileUnsub = null; }
+    if (myAdsUnsub) { myAdsUnsub(); myAdsUnsub = null; }
+    userProfile = null;
+    myAds = [];
+
+    if (user) {
+      await ensureUserProfile(user);
+      subscribeToMyAds(user);
+    } else {
+      feedView = "publico";
+      updateFeedTabsUI();
+    }
+
+    renderAuthArea();
+    publishLocked.style.display = user ? "none" : "block";
+    publishForm.style.display = user ? "block" : "none";
+    renderBoard();
+  });
+
+  // Crea el documento de perfil (usuarios/{uid}) si no existe, y se suscribe
+  // en tiempo real para que los créditos se actualicen al instante.
+  async function ensureUserProfile(user) {
+    const userRef = doc(db, "usuarios", user.uid);
+    const snap = await getDoc(userRef);
+    if (!snap.exists()) {
+      await setDoc(userRef, {
+        email: user.email,
+        creditos: CREDITOS_BIENVENIDA,
+        rol: "usuario",
+        createdAt: serverTimestamp()
+      });
+    }
+    profileUnsub = onSnapshot(userRef, (docSnap) => {
+      userProfile = docSnap.data() || null;
+      renderAuthArea();
+      renderPublishAvailability();
+    });
+  }
+
+  function renderPublishAvailability() {
+    const creditos = userProfile ? userProfile.creditos : 0;
+    creditsInline.textContent = creditos;
+    const sinCreditos = currentUser && creditos <= 0;
+    noCreditsNote.style.display = sinCreditos ? "block" : "none";
+    publishForm.style.display = currentUser && !sinCreditos ? "block" : "none";
+  }
+
+  // ---------------- Publicar anuncio ----------------
+  // Usa una transacción para que el descuento de crédito y la creación del
+  // anuncio ocurran juntos: si algo falla, no se cobra el crédito y no se
+  // crea un anuncio "huérfano".
+  publishForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!currentUser) return;
+
+    publishMsg.className = "form-msg";
+    publishMsg.textContent = "Publicando...";
+
+    const nuevoAnuncio = {
+      title: document.getElementById("adTitle").value.trim(),
+      category: document.getElementById("adCategory").value,
+      description: document.getElementById("adDesc").value.trim(),
+      price: document.getElementById("adPrice").value.trim(),
+      contact: document.getElementById("adContact").value.trim(),
+      userId: currentUser.uid,
+      userEmail: currentUser.email,
+      status: "pendiente",       // pendiente | aprobado | rechazado
+      createdAt: serverTimestamp()
+    };
+
+    const userRef = doc(db, "usuarios", currentUser.uid);
+    const newAdRef = doc(adsCollection);
+
+    try {
+      await runTransaction(db, async (transaction) => {
+        const userSnap = await transaction.get(userRef);
+        const creditosActuales = userSnap.exists() ? (userSnap.data().creditos || 0) : 0;
+
+        if (creditosActuales < COSTO_PUBLICAR) {
+          throw new Error("SIN_CREDITOS");
+        }
+
+        transaction.set(newAdRef, nuevoAnuncio);
+        transaction.update(userRef, { creditos: creditosActuales - COSTO_PUBLICAR });
+      });
+
+      publishForm.reset();
+      publishMsg.className = "form-msg ok";
+      publishMsg.textContent = "¡Anuncio enviado! Quedará visible en el tablero público cuando sea aprobado.";
+      setTimeout(() => { publishMsg.textContent = ""; }, 4000);
+    } catch (err) {
+      publishMsg.className = "form-msg error";
+      publishMsg.textContent = err.message === "SIN_CREDITOS"
+        ? "No te quedan créditos para publicar."
+        : "No se pudo publicar. Intenta de nuevo.";
+      console.error(err);
+    }
+  });
+
+  // ---------------- Feed en tiempo real (tablero público) ----------------
+  // Solo se muestran los anuncios que ya pasaron por aprobación.
+  // NOTA: esta consulta (where + orderBy en campos distintos) puede pedirte
+  // crear un índice compuesto en Firestore la primera vez; sigue el enlace
+  // que aparece en la consola del navegador si eso pasa.
+  const adsQuery = query(
+    adsCollection,
+    where("status", "==", "aprobado"),
+    orderBy("createdAt", "desc")
+  );
+
+  onSnapshot(adsQuery, (snapshot) => {
+    allAds = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderBoard();
+  }, (err) => {
+    board.innerHTML = `
+      <div class="empty-state">
+        <h4>No se pudo conectar con el tablero</h4>
+        <p>Revisa la configuración de Firebase (firebaseConfig) o el índice de Firestore en la consola.</p>
+      </div>`;
+    console.error(err);
+  });
+
+  // ---------------- Mis anuncios (todos los estados) ----------------
+  function subscribeToMyAds(user) {
+    const myAdsQuery = query(adsCollection, where("userId", "==", user.uid));
+    myAdsUnsub = onSnapshot(myAdsQuery, (snapshot) => {
+      myAds = snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      if (feedView === "mios") renderBoard();
+    });
+  }
+
+  // ---------------- Pestañas del feed ----------------
+  feedTabs.addEventListener("click", (e) => {
+    const btn = e.target.closest(".feed-tab");
+    if (!btn) return;
+    const view = btn.dataset.view;
+
+    if (view === "mios" && !currentUser) {
+      openAuthModal();
+      return;
+    }
+
+    feedView = view;
+    updateFeedTabsUI();
+    renderBoard();
+  });
+
+  function updateFeedTabsUI() {
+    [...feedTabs.children].forEach(tab => tab.classList.toggle("active", tab.dataset.view === feedView));
+    feedTitle.textContent = feedView === "publico" ? "Tablero de anuncios" : "Mis anuncios";
+    feedFilters.style.display = feedView === "publico" ? "flex" : "none";
+  }
+
+  feedFilters.addEventListener("click", (e) => {
+    const btn = e.target.closest(".chip");
+    if (!btn) return;
+    currentFilter = btn.dataset.cat;
+    [...feedFilters.children].forEach(c => c.classList.toggle("active", c === btn));
+    renderBoard();
+  });
+
+  const ESTADO_LABEL = { pendiente: "Pendiente", aprobado: "Aprobado", rechazado: "Rechazado" };
+
+  function renderBoard() {
+    const fuente = feedView === "publico" ? allAds : myAds;
+    const ads = (feedView === "publico" && currentFilter !== "Todos")
+      ? fuente.filter(ad => ad.category === currentFilter)
+      : fuente;
+
+    feedCount.textContent = `${ads.length} anuncio${ads.length === 1 ? "" : "s"}`;
+
+    if (ads.length === 0) {
+      board.innerHTML = feedView === "publico" ? `
+        <div class="empty-state">
+          <h4>Aún no hay anuncios aquí</h4>
+          <p>Sé la primera persona en publicar en esta categoría.</p>
+        </div>` : `
+        <div class="empty-state">
+          <h4>Todavía no has publicado nada</h4>
+          <p>Tus anuncios aparecerán aquí, incluso mientras esperan aprobación.</p>
+        </div>`;
+      return;
+    }
+
+    board.innerHTML = ads.map(ad => `
+      <article class="ad-card">
+        <div class="tape"></div>
+        ${feedView === "mios" ? `<span class="status-badge status-${ad.status || "pendiente"}">${ESTADO_LABEL[ad.status] || "Pendiente"}</span>` : ""}
+        <span class="ad-category">${escapeHtml(ad.category || "Otros")}</span>
+        <h4 class="ad-title">${escapeHtml(ad.title || "Sin título")}</h4>
+        <p class="ad-desc">${escapeHtml(ad.description || "")}</p>
+        <div class="ad-foot">
+          <span class="ad-price mono">${escapeHtml(ad.price || "")}</span>
+          <span class="ad-contact mono">${escapeHtml(ad.contact || "")}</span>
+        </div>
+        <div class="ad-seller">Publicado por ${escapeHtml(ad.userEmail || "usuario")}</div>
+      </article>
+    `).join("");
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+</script>
+</body>
+</html>
