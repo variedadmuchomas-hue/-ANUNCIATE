@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anunciate — Panel admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B2A4A;
+    --ink-soft:#3A4A6B;
+    --paper:#F7F3EA;
+    --paper-dark:#EDE6D6;
+    --marker:#FFC93C;
+    --pin:#E4572E;
+    --sage:#6B8F71;
+    --line: rgba(27,42,74,.14);
+    --shadow: rgba(27,42,74,.18);
+    --radius: 3px;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Work Sans', sans-serif;
+    min-height:100vh;
+  }
+  .display{ font-family:'Anton', sans-serif; letter-spacing:.5px; text-transform:uppercase; }
+  .mono{ font-family:'IBM Plex Mono', monospace; }
+  button{ font-family:inherit; cursor:pointer; }
+
+  /* ---------- Pantalla de acceso ---------- */
+  #gate{
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .gate-card{
+    background:#fff; border:2px solid var(--ink); border-radius:var(--radius);
+    box-shadow:6px 6px 0 var(--shadow); padding:30px; width:100%; max-width:360px;
+  }
+  .gate-card h1{ font-size:22px; margin:0 0 4px; }
+  .gate-card p.hint{ font-size:12px; color:var(--ink-soft); margin:0 0 20px; }
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:12px; font-weight:600; margin-bottom:5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.4px; }
+  .field input{
+    width:100%; border:1.5px solid var(--line); border-radius:var(--radius);
+    padding:10px 11px; font-size:14px; font-family:inherit; background:var(--paper); color:var(--ink);
+  }
+  .field input:focus{ outline:3px solid var(--marker); outline-offset:0; border-color:var(--ink); }
+  .btn{
+    border:2px solid var(--ink); background:var(--marker);
+    padding:10px 16px; border-radius:var(--radius); font-weight:700; font-size:14px; color:var(--ink);
+    box-shadow:3px 3px 0 var(--ink); transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .btn:hover{ transform:translate(-1px,-1px); box-shadow:4px 4px 0 var(--ink); }
+  .btn:active{ transform:translate(1px,1px); box-shadow:1px 1px 0 var(--ink); }
+  .btn-block{ width:100%; }
+  .btn-small{ padding:6px 11px; font-size:12px; box-shadow:2px 2px 0 var(--ink); }
+  .btn-ghost{ background:transparent; }
+  .btn-sage{ background:var(--sage); color:#fff; }
+  .btn-pin{ background:var(--pin); color:#fff; }
+  .msg{ font-size:13px; margin-top:12px; min-height:16px; }
+  .msg.error{ color:var(--pin); }
+  .msg.ok{ color:var(--sage); }
+
+  /* ---------- Layout del panel ---------- */
+  #panel{ display:none; min-height:100vh; }
+  .shell{ display:grid; grid-template-columns:220px 1fr; min-height:100vh; }
+  @media (max-width:820px){ .shell{ grid-template-columns:1fr; } .sidebar{ position:static; } }
+
+  .sidebar{
+    background:var(--ink); color:var(--paper);
+    padding:22px 16px; position:sticky; top:0; height:100vh;
+    display:flex; flex-direction:column; gap:22px;
+  }
+  .sidebar .brand{ display:flex; align-items:center; gap:8px; }
+  .sidebar .brand .mark{
+    width:28px; height:28px; background:var(--marker); border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--ink); font-family:'Anton',sans-serif; font-size:14px;
+  }
+  .sidebar .brand h1{ font-size:15px; margin:0; }
+  .sidebar .brand span{ font-size:10px; opacity:.65; display:block; }
+
+  .nav{ display:flex; flex-direction:column; gap:4px; flex:1; }
+  .nav button{
+    text-align:left; background:transparent; border:none; color:var(--paper);
+    padding:10px 12px; border-radius:var(--radius); font-size:13px; font-weight:600;
+    opacity:.75; display:flex; align-items:center; justify-content:space-between;
+  }
+  .nav button:hover{ opacity:1; background:rgba(255,255,255,.06); }
+  .nav button.active{ opacity:1; background:var(--marker); color:var(--ink); }
+  .nav button .count{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; background:rgba(255,255,255,.15);
+    padding:1px 7px; border-radius:20px;
+  }
+  .nav button.active .count{ background:rgba(27,42,74,.15); }
+
+  .sidebar-foot{ font-size:11px; opacity:.7; }
+  .sidebar-foot .who{ font-family:'IBM Plex Mono', monospace; margin-bottom:8px; word-break:break-all; }
+
+  main{ padding:clamp(18px,3vw,40px); }
+  .view-head{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:18px; flex-wrap:wrap; gap:8px; }
+  .view-head h2{ margin:0; font-size:22px; }
+  .view-head p{ margin:2px 0 0; font-size:13px; color:var(--ink-soft); }
+
+  .table-card{
+    background:#fff; border:2px solid var(--ink); border-radius:var(--radius);
+    box-shadow:5px 5px 0 var(--shadow); overflow:hidden;
+  }
+  .row{
+    display:grid; grid-template-columns: 1fr auto; gap:14px; align-items:center;
+    padding:16px 18px; border-bottom:1px solid var(--line);
+  }
+  .row:last-child{ border-bottom:none; }
+  .row-main .cat{
+    display:inline-block; font-size:10px; letter-spacing:.4px; text-transform:uppercase;
+    background:var(--paper-dark); border:1px solid var(--line); border-radius:20px;
+    padding:2px 9px; margin-bottom:6px; color:var(--ink-soft); font-weight:700;
+  }
+  .row-main h4{ margin:0 0 4px; font-size:15px; }
+  .row-main p{ margin:0 0 6px; font-size:13px; color:var(--ink-soft); max-width:560px; }
+  .row-main .meta{ font-size:11px; color:var(--ink-soft); display:flex; gap:12px; flex-wrap:wrap; }
+  .row-actions{ display:flex; gap:8px; flex-shrink:0; }
+
+  .empty{ padding:40px 20px; text-align:center; color:var(--ink-soft); font-size:13px; }
+
+  .badge-status{
+    font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.4px;
+    padding:3px 9px; border-radius:20px; border:1px solid rgba(27,42,74,.25);
+  }
+  .status-pendiente{ background:#FDE7B0; color:#7A5A00; }
+  .status-aprobado{ background:#DCEBDD; color:#2F5C36; }
+  .status-rechazado{ background:#F7D3C6; color:#9A2E13; }
+
+  .credit-form{ display:flex; gap:6px; align-items:center; }
+  .credit-form input{
+    width:64px; border:1.5px solid var(--line); border-radius:var(--radius);
+    padding:8px 9px; font-size:13px; font-family:'IBM Plex Mono', monospace; text-align:center;
+  }
+  .credits-num{ font-family:'IBM Plex Mono', monospace; font-weight:700; font-size:15px; }
+</style>
+</head>
+<body>
+
+<!-- ================= Puerta de acceso ================= -->
+<div id="gate">
+  <div class="gate-card">
+    <h1 class="display">Panel admin</h1>
+    <p class="hint">Acceso restringido a cuentas con rol de administrador.</p>
+    <form id="gateForm">
+      <div class="field">
+        <label for="gateEmail">Correo</label>
+        <input id="gateEmail" type="email" required>
+      </div>
+      <div class="field">
+        <label for="gatePass">Contraseña</label>
+        <input id="gatePass" type="password" required>
+      </div>
+      <button type="submit" class="btn btn-block">Entrar</button>
+      <p class="msg" id="gateMsg"></p>
+    </form>
+  </div>
+</div>
+
+<!-- ================= Panel ================= -->
+<div id="panel">
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="mark display">A</div>
+        <div>
+          <h1 class="display">Anunciate</h1>
+          <span>Panel admin</span>
+        </div>
+      </div>
+
+      <nav class="nav" id="navTabs">
+        <!-- Los botones de pestañas se generan por JS a partir de TABS -->
+      </nav>
+
+      <div class="sidebar-foot">
+        <div class="who mono" id="whoAmI"></div>
+        <button class="btn btn-small btn-ghost" id="logoutBtn" style="color:var(--paper); border-color:rgba(255,255,255,.4);">Cerrar sesión</button>
+      </div>
+    </aside>
+
+    <main>
+      <div class="view-head">
+        <div>
+          <h2 id="viewTitle">Anuncios pendientes</h2>
+          <p id="viewSubtitle">Revisa y aprueba lo que la gente quiere publicar.</p>
+        </div>
+      </div>
+      <div id="viewBody"></div>
+    </main>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import {
+    getFirestore, collection, doc, getDoc, onSnapshot, updateDoc,
+    query, orderBy, increment
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  // Misma configuración que index.html — proyecto anunciate-fe667.
+  const firebaseConfig = {
+    apiKey: "AIzaSyAWUfbcGmXWExomQQ75S-_bzdd6NG6KsDU",
+    authDomain: "anunciate-fe667.firebaseapp.com",
+    projectId: "anunciate-fe667",
+    storageBucket: "anunciate-fe667.firebasestorage.app",
+    messagingSenderId: "241022926550",
+    appId: "1:241022926550:web:f9499c30a94952481ad377"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const adsCollection = collection(db, "anuncios");
+  const usersCollection = collection(db, "usuarios");
+
+  // ------------------------------------------------------------------
+  // Estructura de pestañas: para agregar una pestaña nueva en el futuro
+  // (ej. "Reportes", "Categorías") solo hay que:
+  //   1) agregar un objeto aquí con { id, label, subtitle, render }
+  //   2) escribir la función render() que dibuja esa vista en #viewBody
+  // No hace falta tocar el resto del archivo.
+  // ------------------------------------------------------------------
+  const TABS = [
+    {
+      id: "pendientes",
+      label: "Anuncios pendientes",
+      subtitle: "Revisa y aprueba lo que la gente quiere publicar.",
+      countFn: () => allAds.filter(a => a.status === "pendiente").length,
+      render: renderPendientes
+    },
+    {
+      id: "todos",
+      label: "Todos los anuncios",
+      subtitle: "Historial completo del tablero, en cualquier estado.",
+      countFn: () => allAds.length,
+      render: renderTodos
+    },
+    {
+      id: "usuarios",
+      label: "Usuarios y créditos",
+      subtitle: "Consulta y recarga créditos manualmente.",
+      countFn: () => allUsers.length,
+      render: renderUsuarios
+    }
+  ];
+
+  let currentTab = "pendientes";
+  let allAds = [];
+  let allUsers = [];
+  let adsUnsub = null;
+  let usersUnsub = null;
+
+  // ---------------- Referencias DOM ----------------
+  const gate = document.getElementById("gate");
+  const gateForm = document.getElementById("gateForm");
+  const gateMsg = document.getElementById("gateMsg");
+  const panel = document.getElementById("panel");
+  const navTabs = document.getElementById("navTabs");
+  const whoAmI = document.getElementById("whoAmI");
+  const viewTitle = document.getElementById("viewTitle");
+  const viewSubtitle = document.getElementById("viewSubtitle");
+  const viewBody = document.getElementById("viewBody");
+
+  // ---------------- Login ----------------
+  gateForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    gateMsg.className = "msg";
+    gateMsg.textContent = "Verificando...";
+    try {
+      await signInWithEmailAndPassword(
+        auth,
+        document.getElementById("gateEmail").value,
+        document.getElementById("gatePass").value
+      );
+      // La verificación de rol admin ocurre en onAuthStateChanged.
+    } catch (err) {
+      gateMsg.className = "msg error";
+      gateMsg.textContent = "Correo o contraseña incorrectos.";
+    }
+  });
+
+  document.getElementById("logoutBtn").addEventListener("click", () => signOut(auth));
+
+  onAuthStateChanged(auth, async (user) => {
+    if (adsUnsub) { adsUnsub(); adsUnsub = null; }
+    if (usersUnsub) { usersUnsub(); usersUnsub = null; }
+
+    if (!user) {
+      panel.style.display = "none";
+      gate.style.display = "flex";
+      return;
+    }
+
+    // Verifica el rol antes de dejar entrar. La colección "usuarios" solo
+    // permite leer el propio documento (ver firestore.rules), así que esto
+    // es seguro: si no es admin, simplemente no puede pasar de aquí.
+    try {
+      const snap = await getDoc(doc(db, "usuarios", user.uid));
+      const rol = snap.exists() ? snap.data().rol : null;
+
+      if (rol !== "admin") {
+        gateMsg.className = "msg error";
+        gateMsg.textContent = "Esta cuenta no tiene permisos de administrador.";
+        await signOut(auth);
+        return;
+      }
+    } catch (err) {
+      gateMsg.className = "msg error";
+      gateMsg.textContent = "No se pudo verificar el rol. Intenta de nuevo.";
+      await signOut(auth);
+      return;
+    }
+
+    whoAmI.textContent = user.email;
+    gate.style.display = "none";
+    panel.style.display = "block";
+    subscribeData();
+    renderNav();
+    renderCurrentTab();
+  });
+
+  // ---------------- Datos en tiempo real ----------------
+  function subscribeData() {
+    const adsQuery = query(adsCollection, orderBy("createdAt", "desc"));
+    adsUnsub = onSnapshot(adsQuery, (snapshot) => {
+      allAds = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderNav();
+      if (currentTab === "pendientes" || currentTab === "todos") renderCurrentTab();
+    });
+
+    usersUnsub = onSnapshot(usersCollection, (snapshot) => {
+      allUsers = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderNav();
+      if (currentTab === "usuarios") renderCurrentTab();
+    });
+  }
+
+  // ---------------- Navegación de pestañas ----------------
+  function renderNav() {
+    navTabs.innerHTML = TABS.map(tab => `
+      <button data-tab="${tab.id}" class="${tab.id === currentTab ? "active" : ""}">
+        <span>${tab.label}</span>
+        <span class="count mono">${tab.countFn()}</span>
+      </button>
+    `).join("");
+
+    navTabs.querySelectorAll("button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        currentTab = btn.dataset.tab;
+        renderNav();
+        renderCurrentTab();
+      });
+    });
+  }
+
+  function renderCurrentTab() {
+    const tab = TABS.find(t => t.id === currentTab);
+    viewTitle.textContent = tab.label;
+    viewSubtitle.textContent = tab.subtitle;
+    tab.render();
+  }
+
+  // ---------------- Vista: Anuncios pendientes ----------------
+  function renderPendientes() {
+    const pendientes = allAds.filter(a => a.status === "pendiente");
+    if (pendientes.length === 0) {
+      viewBody.innerHTML = `<div class="table-card"><div class="empty">No hay anuncios esperando revisión ahora mismo.</div></div>`;
+      return;
+    }
+    viewBody.innerHTML = `<div class="table-card">${pendientes.map(adRowHtml).join("")}</div>`;
+    bindAdActions();
+  }
+
+  // ---------------- Vista: Todos los anuncios ----------------
+  function renderTodos() {
+    if (allAds.length === 0) {
+      viewBody.innerHTML = `<div class="table-card"><div class="empty">Todavía no hay anuncios en el sistema.</div></div>`;
+      return;
+    }
+    viewBody.innerHTML = `<div class="table-card">${allAds.map(adRowHtml).join("")}</div>`;
+    bindAdActions();
+  }
+
+  function adRowHtml(ad) {
+    const estado = ad.status || "pendiente";
+    const label = { pendiente: "Pendiente", aprobado: "Aprobado", rechazado: "Rechazado" }[estado];
+    return `
+      <div class="row">
+        <div class="row-main">
+          <span class="cat">${escapeHtml(ad.category || "Otros")}</span>
+          <h4>${escapeHtml(ad.title || "Sin título")}</h4>
+          <p>${escapeHtml(ad.description || "")}</p>
+          <div class="meta">
+            <span class="badge-status status-${estado}">${label}</span>
+            <span class="mono">${escapeHtml(ad.price || "")}</span>
+            <span class="mono">${escapeHtml(ad.contact || "")}</span>
+            <span>${escapeHtml(ad.userEmail || "")}</span>
+          </div>
+        </div>
+        <div class="row-actions">
+          ${estado !== "aprobado" ? `<button class="btn btn-small btn-sage" data-approve="${ad.id}">Aprobar</button>` : ""}
+          ${estado !== "rechazado" ? `<button class="btn btn-small btn-pin" data-reject="${ad.id}">Rechazar</button>` : ""}
+        </div>
+      </div>
+    `;
+  }
+
+  function bindAdActions() {
+    viewBody.querySelectorAll("[data-approve]").forEach(btn => {
+      btn.addEventListener("click", () => setAdStatus(btn.dataset.approve, "aprobado"));
+    });
+    viewBody.querySelectorAll("[data-reject]").forEach(btn => {
+      btn.addEventListener("click", () => setAdStatus(btn.dataset.reject, "rechazado"));
+    });
+  }
+
+  async function setAdStatus(adId, status) {
+    try {
+      await updateDoc(doc(db, "anuncios", adId), { status });
+    } catch (err) {
+      alert("No se pudo actualizar el anuncio.");
+      console.error(err);
+    }
+  }
+
+  // ---------------- Vista: Usuarios y créditos ----------------
+  function renderUsuarios() {
+    if (allUsers.length === 0) {
+      viewBody.innerHTML = `<div class="table-card"><div class="empty">Todavía no hay usuarios registrados.</div></div>`;
+      return;
+    }
+    viewBody.innerHTML = `<div class="table-card">${allUsers.map(userRowHtml).join("")}</div>`;
+
+    viewBody.querySelectorAll("[data-credit-form]").forEach(form => {
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const uid = form.dataset.creditForm;
+        const input = form.querySelector("input");
+        const cantidad = parseInt(input.value, 10);
+        if (!cantidad || cantidad === 0) return;
+        try {
+          await updateDoc(doc(db, "usuarios", uid), { creditos: increment(cantidad) });
+          input.value = "";
+        } catch (err) {
+          alert("No se pudo actualizar los créditos.");
+          console.error(err);
+        }
+      });
+    });
+  }
+
+  function userRowHtml(u) {
+    return `
+      <div class="row">
+        <div class="row-main">
+          <h4>${escapeHtml(u.email || u.id)}</h4>
+          <div class="meta">
+            <span>Rol: <b>${escapeHtml(u.rol || "usuario")}</b></span>
+            <span>Créditos actuales: <span class="credits-num">${u.creditos ?? 0}</span></span>
+          </div>
+        </div>
+        <div class="row-actions">
+          <form class="credit-form" data-credit-form="${u.id}">
+            <input type="number" placeholder="±N" required>
+            <button type="submit" class="btn btn-small">Aplicar</button>
+          </form>
+        </div>
+      </div>
+    `;
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+</script>
+</body>
+</html>
